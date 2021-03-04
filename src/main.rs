@@ -2,16 +2,18 @@ use bevy::prelude::*;
 
 pub struct HelloPlugin;
 
+struct GreetTimer(Timer);
+
 impl Plugin for HelloPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(add_people.system())
-            .add_system(hello_world.system())
+        app
+            .add_resource(GreetTimer(Timer::from_seconds(2.0, true)))
+            .add_startup_system(add_people.system())
             .add_system(greet_people.system());
     }
 }
 
 struct Person;
-
 struct Name(String);
 
 fn add_people(commands: &mut Commands)
@@ -23,16 +25,15 @@ fn add_people(commands: &mut Commands)
     println!("Ran first!");
 }
 
-fn hello_world()
+fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Person>>)
 {
-    println!("hello world!");
-}
+    if !timer.0.tick(time.delta_seconds()).just_finished() {
+        return;
+    }
 
-fn greet_people(query: Query<&Name, With<Person>>)
-{
-   for name in query.iter() {
-       println!("hello {}!", name.0);
-   }
+    for name in query.iter() {
+        println!("hello {}!", name.0);
+    }
 }
 
 fn main() {
